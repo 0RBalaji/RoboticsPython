@@ -143,7 +143,12 @@ class AStarPlanner:
                 closed_y.append(curr_node.position[0])
 
             for neighbor_pos in self.get_neighbor(curr_node.position):
-                tentative_g = curr_node.g + 1  # Assuming cost = 1 for each step
+                tentative_g = curr_node.g + (
+                    np.sqrt(2)
+                    if abs(curr_node.position[0] - neighbor_pos[0]) == 1 and
+                    abs(curr_node.position[1] - neighbor_pos[1]) == 1
+                    else 1
+                    )
 
                 if neighbor_pos in g_score and tentative_g >= g_score[neighbor_pos]:
                     continue  # Not a better path
