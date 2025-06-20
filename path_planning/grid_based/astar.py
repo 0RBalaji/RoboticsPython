@@ -4,6 +4,19 @@ import heapq
 from dataclasses import dataclass, field
 from typing import Tuple, List, Optional
 
+import time
+from functools import wraps
+
+def timer(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        end = time.perf_counter()
+        print(f"[TIMER] {func.__name__} took {end - start:.4f} seconds")
+        return result
+    return wrapper
+
 # Maze setup:
 @dataclass(order=True)
 class Node:
@@ -59,9 +72,10 @@ class AStarPlanner:
 
     def heuristic(self, a: Tuple[int, int], b: Tuple[int, int]) -> float:
         
-        # return np.linalg.norm(np.array(a) - np.array(b))    # Euclidean
+        weight = 1.0
+        return weight * np.hypot(a[0] - b[0], a[1] - b[1])    # Euclidean
         
-        return abs(a[0] - b[0]) + abs(a[1] - b[1])  # Manhattan
+        # return abs(a[0] - b[0]) + abs(a[1] - b[1])  # Manhattan
         
         # weight = 1.5  # adjust this weight to balance A* exploration
         # return weight * np.linalg.norm(np.array(a) - np.array(b))
@@ -74,7 +88,7 @@ class AStarPlanner:
         neighbors = []
         for dx, dy in directions:
             nx, ny = node_pos[0] + dx, node_pos[1] + dy
-            if 0<= nx < self.rows and 0 <= ny < self.columns and self.maze[nx, ny] == 0:
+            if 0<= nx < self.rows and 0 <= ny < self.columns:
                 if self.check_collision(nx, ny):
                     neighbors.append((nx, ny))
         return neighbors
@@ -107,13 +121,16 @@ class AStarPlanner:
         plt.ion()
         plt.show()
     
+    @timer
     def plan(self, visualize: bool = False) -> Optional[List[Tuple[int, int]]]:
         open_set = []
-        start_node = Node(0, self.heuristic(self.start, self.goal), self.start, None)
+        start_node = Node(g=0, h=self.heuristic(self.start, self.goal), position=self.start, parent=None)
+        # start_node = Node(0, self.heuristic(self.start, self.goal), self.start, None)
         heapq.heappush(open_set, start_node)
 
         g_score = {self.start: 0}  # Cost from start to node
-        visited = set()
+        # visited = set()
+        visited = {}
 
         if visualize:
             self._init_visual()
@@ -134,9 +151,11 @@ class AStarPlanner:
                 return self.generate_final_path(curr_node)
 
             if curr_node.position in visited:
-                continue  # Already processed with a better or equal cost
+                if curr_node.f >= visited[curr_node.position]:
+                    continue  # Already processed with a better or equal cost
 
-            visited.add(curr_node.position)
+            visited[curr_node.position] = curr_node.f  # Update the best cost for this node
+            # visited.add(curr_node.position)
 
             if visualize:
                 closed_x.append(curr_node.position[1])
@@ -155,7 +174,8 @@ class AStarPlanner:
 
                 g_score[neighbor_pos] = tentative_g
                 h = self.heuristic(neighbor_pos, self.goal)
-                neighbor_node = Node(tentative_g, h, neighbor_pos, curr_node)
+                neighbor_node = Node(g=tentative_g, h=h, position=neighbor_pos, parent=curr_node)
+                # neighbor_node = Node(tentative_g, h, neighbor_pos, curr_node)
                 heapq.heappush(open_set, neighbor_node)
 
                 if visualize:
@@ -166,7 +186,7 @@ class AStarPlanner:
                 self.open_set_plot.set_data(open_x, open_y)
                 self.closed_set_plot.set_data(closed_x, closed_y)
                 plt.draw()
-                plt.pause(0.001)
+                plt.pause(0.0005)
 
         return None
 
@@ -228,7 +248,7 @@ if __name__ == "__main__":
     size = 50   # Keep >40
     # maze = generate_maze(size, 0.3)
     maze = generate_maze(size)
-    start = (3, 3)
+    start = (18, 18)
     goal = (size-3, size-3)
 
     planner = AStarPlanner(maze, start, goal, size)
