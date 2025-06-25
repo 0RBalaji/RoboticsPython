@@ -4,7 +4,7 @@ import heapq
 from dataclasses import dataclass, field
 from typing import Tuple, List, Optional
 
-# Maze setup:
+# Nodes:
 @dataclass(order=True)
 class Node:
     g: float
