@@ -20,9 +20,9 @@ def timer(func):
 # Nodes:
 @dataclass(order=True)
 class Node:
-    g: float
-    h: float
     f: float = field(init=False)
+    g: float = field(compare=False)
+    h: float = field(compare=False)
     position: Tuple[int, int] = field(compare=False)
     parent: Optional['Node'] = field(default=None, compare=False)
 
@@ -114,8 +114,8 @@ class AStarPlanner:
         self.ax.set_title("A* Path Planning")
         self.ax.invert_yaxis()
         self.ax.axis('off')
-        self.open_set_plot, = self.ax.plot([], [], 'co', markersize=5, alpha=0.6, label='Open Set')
-        self.closed_set_plot, = self.ax.plot([], [], 'yx', markersize=5, alpha=0.6, label='Closed Set')
+        self.open_set_plot, = self.ax.plot([], [], 'o', color='cyan', markersize=5, alpha=0.4, label='Open Set')
+        self.closed_set_plot, = self.ax.plot([], [], 'x', color='darkorange', markersize=5, alpha=0.9, label='Closed Set')
         self.path_plot, = self.ax.plot([], [], 'b-', linewidth=2, label='Path')
         self.ax.legend()
         plt.ion()
@@ -248,7 +248,7 @@ if __name__ == "__main__":
     size = 50   # Keep >40
     # maze = generate_maze(size, 0.3)
     maze = generate_maze(size)
-    start = (18, 18)
+    start = (10, 10)
     goal = (size-3, size-3)
 
     planner = AStarPlanner(maze, start, goal, size)
