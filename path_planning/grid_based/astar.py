@@ -17,7 +17,7 @@ def timer(func):
         return result
     return wrapper
 
-# Maze setup:
+# Nodes:
 @dataclass(order=True)
 class Node:
     g: float
